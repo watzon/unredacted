@@ -156,27 +156,14 @@ async function handleSearch(url: URL, env: Env): Promise<Response> {
   const titleParams = agency ? [`%${q}%`, agency] : [`%${q}%`];
   const { results: titleResults } = await env.DB.prepare(titleSql).bind(...titleParams).all();
 
-  // Merge: FTS content results first, then title matches, dedup by document_id
-  const seen = new Set<string>();
-  const merged = [];
-  for (const r of [...(results as any[]), ...(titleResults as any[])]) {
-    if (!seen.has(r.document_id)) {
-      seen.add(r.document_id);
-      merged.push(r);
-    }
-  }
-
-  // Count total unique document hits
-  const countSql = agency
-    ? `SELECT COUNT(DISTINCT s.document_id) as total FROM search_idx s JOIN documents d ON d.id = s.document_id WHERE search_idx MATCH ?1 AND d.agency = ?2`
-    : `SELECT COUNT(DISTINCT s.document_id) as total FROM search_idx s WHERE search_idx MATCH ?1`;
-
-  const countParams = agency ? [ftsQuery, agency] : [ftsQuery];
-  const { results: countResults } = await env.DB.prepare(countSql).bind(...countParams).all();
-  const total = (countResults[0] as any)?.total || 0;
+  // Merge FTS + title results — keep all page-level hits
+  const allHits = [...(results as any[]), ...(titleResults as any[])];
+  // Slice for pagination
+  const paged = allHits.slice(offset, offset + limit);
+  const total = allHits.length;
 
   return json({
-    results: merged,
+    results: paged,
     total,
     page,
     pages: Math.ceil(total / limit),
