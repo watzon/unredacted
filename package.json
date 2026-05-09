@@ -1,0 +1,21 @@
+{
+  "name": "unredacted",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Searchable archive of declassified UAP documents from the Department of War PURSUE program",
+  "scripts": {
+    "dev": "cd site && bun run dev --host 0.0.0.0",
+    "build": "cd site && bun run build",
+    "lint": "cd site && bun run lint",
+    "deploy:worker": "wrangler deploy",
+    "deploy:site": "cd site && bun run build && wrangler pages deploy dist --project-name=unredacted-site",
+    "deploy": "bun run deploy:worker && bun run deploy:site",
+    "seed": "python3 scripts/seed.py | wrangler d1 execute unredacted-db --remote --file=-",
+    "ocr": "python3 scripts/war_ocr_pipeline.py",
+    "thumbs": "python3 scripts/generate_thumbs2.py",
+    "index": "python3 scripts/build_doc_index.py"
+  },
+  "dependencies": {
+    "wrangler": "^4"
+  }
+}

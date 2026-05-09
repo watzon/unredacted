@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+site/node_modules/
+.bun/
+
+# Build output
+site/dist/
+.wrangler/
+
+# Environment
+.env
+.env.local
+*.dev.vars
+
+# OCR cache
+ocr-cache/
+thumb-cache/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large data (not committed)
+/mnt/
+/tmp/
+
+# Logs
+*.log

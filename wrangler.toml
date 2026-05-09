@@ -1,0 +1,21 @@
+# Unredacted — Cloudflare Stack
+# ==============================
+
+name = "unredacted-api"
+main = "worker/index.ts"
+compatibility_date = "2025-05-08"
+
+# ── D1 Database ────────────────────────────────────────────
+[[d1_databases]]
+binding = "DB"
+database_name = "unredacted-db"
+database_id = "364013bc-c30e-41f8-93a7-f62a0968ffd9"
+
+# ── R2 Bucket ──────────────────────────────────────────────
+[[r2_buckets]]
+binding = "PDFS"
+bucket_name = "unredacted-pdfs"
+
+# ── Env vars ───────────────────────────────────────────────
+[vars]
+CORS_ORIGIN = "https://unredacted.space"
