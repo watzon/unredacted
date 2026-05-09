@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { loadDocument } from '../lib/data'
 import type { DocumentMeta, PageOCR } from '../lib/types'
 import { agencyColor } from '../lib/types'
@@ -47,6 +48,18 @@ export function DocumentPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
+      <Helmet>
+        <title>{doc.title} — UNREDACTED</title>
+        <meta property="og:title" content={`${doc.title} — UNREDACTED`} />
+        <meta property="og:description" content={doc.description || `Declassified ${doc.agency} document. ${doc.pages} pages.`} />
+        <meta property="og:image" content={`https://unredacted-api.watzon.workers.dev/api/thumbnails/${doc.id}.png`} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:type" content="article" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${doc.title} — UNREDACTED`} />
+        <meta name="twitter:image" content={`https://unredacted-api.watzon.workers.dev/api/thumbnails/${doc.id}.png`} />
+      </Helmet>
       {/* Breadcrumb */}
       <Link to="/" className="text-xf-muted hover:text-xf-accent text-xs font-mono tracking-wider inline-block mb-6">
         ← CASE FILES

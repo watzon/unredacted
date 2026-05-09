@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#08080d"/>
+      <stop offset="50%" stop-color="#0f0f18"/>
+      <stop offset="100%" stop-color="#08080d"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#c4a93e"/>
+      <stop offset="100%" stop-color="#8b7320"/>
+    </linearGradient>
+    <filter id="noise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feBlend in="SourceGraphic" mode="multiply" result="noise"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="#000" opacity="0.02" filter="url(#noise)"/>
+
+  <!-- Scanlines -->
+  <pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse">
+    <rect width="4" height="2" fill="rgb(0,0,0)" opacity="0.03"/>
+  </pattern>
+  <rect width="1200" height="630" fill="url(#scan)"/>
+
+  <!-- Stars -->
+  <circle cx="120" cy="80" r="1.5" fill="rgb(196,169,62)" opacity="0.4"/>
+  <circle cx="340" cy="150" r="1" fill="rgb(196,169,62)" opacity="0.3"/>
+  <circle cx="600" cy="60" r="2" fill="rgb(196,169,62)" opacity="0.5"/>
+  <circle cx="850" cy="120" r="1" fill="rgb(255,255,255)" opacity="0.2"/>
+  <circle cx="1050" cy="90" r="1.5" fill="rgb(196,169,62)" opacity="0.35"/>
+  <circle cx="200" cy="500" r="1" fill="rgb(255,255,255)" opacity="0.15"/>
+  <circle cx="950" cy="480" r="1.5" fill="rgb(196,169,62)" opacity="0.3"/>
+
+  <!-- UFO glow -->
+  <ellipse cx="600" cy="50" rx="300" ry="80" fill="rgb(196,169,62)" opacity="0.03"/>
+
+  <!-- Center: Seal logo -->
+  <g transform="translate(600, 260)">
+    <rect x="-60" y="-60" width="120" height="120" rx="8" fill="none" stroke="url(#gold)" stroke-width="3" transform="rotate(45)"/>
+    <rect x="-48" y="-48" width="96" height="96" rx="5" fill="none" stroke="url(#gold)" stroke-width="1" opacity="0.5" transform="rotate(45)"/>
+    <text x="0" y="5" text-anchor="middle" font-family="monospace" font-size="32" font-weight="bold" fill="url(#gold)" letter-spacing="2">UN</text>
+  </g>
+
+  <!-- Title -->
+  <text x="600" y="385" text-anchor="middle" font-family="monospace" font-size="64" font-weight="bold" fill="rgb(196,169,62)" opacity="0.9" letter-spacing="12">UNREDACTED</text>
+
+  <!-- Subtitle -->
+  <text x="600" y="430" text-anchor="middle" font-family="monospace" font-size="18" fill="rgb(139,139,154)" letter-spacing="6">
+    DECLASSIFIED UAP DOCUMENTS
+  </text>
+
+  <!-- Bottom bar -->
+  <line x1="300" y1="480" x2="900" y2="480" stroke="rgb(30,30,51)" stroke-width="1"/>
+  <text x="600" y="520" text-anchor="middle" font-family="monospace" font-size="14" fill="rgb(139,139,154)" letter-spacing="4">
+    DEPARTMENT OF WAR • PURSUE PROGRAM
+  </text>
+
+  <!-- Corner markers -->
+  <path d="M20,20 L20,60 M20,20 L60,20" stroke="rgb(196,169,62)" stroke-width="1" opacity="0.3" fill="none"/>
+  <path d="M1180,20 L1180,60 M1180,20 L1140,20" stroke="rgb(196,169,62)" stroke-width="1" opacity="0.3" fill="none"/>
+  <path d="M20,610 L20,570 M20,610 L60,610" stroke="rgb(196,169,62)" stroke-width="1" opacity="0.3" fill="none"/>
+  <path d="M1180,610 L1180,570 M1180,610 L1140,610" stroke="rgb(196,169,62)" stroke-width="1" opacity="0.3" fill="none"/>
+
+  <!-- Classification bar -->
+  <rect x="0" y="0" width="1200" height="3" fill="rgb(185,28,28)" opacity="0.4"/>
+  <text x="600" y="618" text-anchor="middle" font-family="monospace" font-size="10" fill="rgb(139,139,154)" opacity="0.5" letter-spacing="3">
+    UNREDACTED.SPACE
+  </text>
+</svg>
