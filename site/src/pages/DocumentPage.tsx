@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useSearchParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { loadDocument } from '../lib/data'
 import type { DocumentMeta, PageOCR } from '../lib/types'
@@ -7,6 +7,8 @@ import { agencyColor } from '../lib/types'
 
 export function DocumentPage() {
   const { id } = useParams<{ id: string }>()
+  const [searchParams] = useSearchParams()
+  const targetPage = parseInt(searchParams.get('page') || '1')
   const [doc, setDoc] = useState<DocumentMeta | null>(null)
   const [pages, setPages] = useState<PageOCR[]>([])
   const [activePage, setActivePage] = useState(0)
@@ -21,11 +23,14 @@ export function DocumentPage() {
   useEffect(() => {
     if (!doc) return
     setLoadingPages(true)
-    loadOCRSample(doc.id).then(p => {
+    loadPages(doc.id, targetPage).then(p => {
       setPages(p)
+      // Set active page to the target page's position in our loaded pages
+      const idx = p.findIndex(pg => pg._meta?.page === targetPage)
+      setActivePage(idx >= 0 ? idx : 0)
       setLoadingPages(false)
     })
-  }, [doc])
+  }, [doc, targetPage])
 
   if (loading) {
     return (
@@ -91,7 +96,19 @@ export function DocumentPage() {
                 {/* Page nav */}
                 <div className="flex items-center justify-between px-6 py-3 border-b border-xf-border bg-xf-surface/50">
                   <button
-                    onClick={() => setActivePage(Math.max(0, activePage - 1))}
+                    onClick={async () => {
+                      const curPage = pages[activePage]?._meta?.page || 1
+                      if (curPage <= 1) return
+                      // If page not loaded yet, load it
+                      const idx = pages.findIndex(p => p._meta?.page === curPage - 1)
+                      if (idx < 0 && doc) {
+                        const prev = await loadPages(doc.id, curPage - 1)
+                        setPages(prev)
+                        setActivePage(prev.length - 1)
+                      } else {
+                        setActivePage(idx)
+                      }
+                    }}
                     disabled={activePage === 0}
                     className="px-3 py-1 text-[10px] font-mono tracking-wider border border-xf-border
                                disabled:opacity-20 hover:border-xf-accent/50 transition-colors"
@@ -99,10 +116,21 @@ export function DocumentPage() {
                     ◄ PREV
                   </button>
                   <span className="text-[10px] font-mono text-xf-muted tracking-wider">
-                    PAGE {activePage + 1} OF {pages.length}
+                    PAGE {pages[activePage]?._meta?.page || activePage + 1} OF {doc.pages || '?'}
                   </span>
                   <button
-                    onClick={() => setActivePage(Math.min(pages.length - 1, activePage + 1))}
+                    onClick={async () => {
+                      const curPage = pages[activePage]?._meta?.page || 1
+                      if (!doc || curPage >= (doc.pages || 9999)) return
+                      const idx = pages.findIndex(p => p._meta?.page === curPage + 1)
+                      if (idx < 0 && doc) {
+                        const next = await loadPages(doc.id, curPage + 1)
+                        setPages(next)
+                        setActivePage(0)
+                      } else {
+                        setActivePage(idx)
+                      }
+                    }}
                     disabled={activePage === pages.length - 1}
                     className="px-3 py-1 text-[10px] font-mono tracking-wider border border-xf-border
                                disabled:opacity-20 hover:border-xf-accent/50 transition-colors"
@@ -274,42 +302,36 @@ function Field({ label, value }: { label: string; value: string }) {
 
 const API = 'https://unredacted-api.watzon.workers.dev'
 
-async function loadOCRSample(docId: string): Promise<PageOCR[]> {
+// Load a window of pages around the target page from the API
+async function loadPages(docId: string, target: number): Promise<PageOCR[]> {
   try {
-    const resp = await fetch(`${API}/api/documents/${docId}/pages`)
-    if (resp.ok) {
-      const pageList = await resp.json()
-      const pages: PageOCR[] = []
-      for (const p of pageList.slice(0, 5)) {
-        const pr = await fetch(`${API}/api/documents/${docId}/pages/${p.page_number}`)
-        if (pr.ok) {
-          const data = await pr.json()
-          pages.push({
-            page_type: data.page_type || 'unknown',
-            content: data.content || '',
-            legibility: data.legibility || 'unknown',
-            fields: {
-              case_numbers: (data.case_numbers || '').split(', ').filter(Boolean),
-              dates: (data.dates || '').split(', ').filter(Boolean),
-              agencies: (data.agencies || '').split(', ').filter(Boolean),
-              names: [], classifications: [],
-              foipa_references: [], serial_numbers: [], file_references: [], locations: [],
-            },
-            stamps_and_markings: (data.stamps || '').split(', ').filter(Boolean),
-            _meta: { document: docId, page: p.page_number, prompt_tokens: 0, completion_tokens: 0 }
-          })
-        }
+    // Fetch 10 pages: target ± 5
+    const start = Math.max(1, target - 4)
+    const end = target + 5
+    const pages: PageOCR[] = []
+    
+    for (let p = start; p <= end; p++) {
+      const resp = await fetch(`${API}/api/documents/${docId}/pages/${p}`)
+      if (resp.ok) {
+        const data = await resp.json()
+        pages.push({
+          page_type: data.page_type || 'unknown',
+          content: data.content || '',
+          legibility: data.legibility || 'unknown',
+          fields: {
+            case_numbers: (data.case_numbers || '').split(', ').filter(Boolean),
+            dates: (data.dates || '').split(', ').filter(Boolean),
+            agencies: (data.agencies || '').split(', ').filter(Boolean),
+            names: [], classifications: [],
+            foipa_references: [], serial_numbers: [], file_references: [], locations: [],
+          },
+          stamps_and_markings: (data.stamps || '').split(', ').filter(Boolean),
+          _meta: { document: docId, page: p, prompt_tokens: 0, completion_tokens: 0 }
+        })
       }
-      if (pages.length > 0) return pages
     }
-  } catch { /* fallback failed silently */ }
-  // Fallback to local
-  const pages: PageOCR[] = []
-  for (let i = 1; i <= 5; i++) {
-    try {
-      const resp = await fetch(`/ocr/${docId}/page_${String(i).padStart(4, '0')}.json`)
-      if (resp.ok) pages.push(await resp.json())
-    } catch { break }
+    return pages
+  } catch {
+    return []
   }
-  return pages
 }
