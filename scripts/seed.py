@@ -95,14 +95,14 @@ def main():
             print(f"VALUES ('{esc(doc_id)}', {page_num}, '{esc(page_type)}', '{content}', '{esc(legibility)}', {pt}, {ct});")
             page_count += 1
 
-            # Insert page fields
+            # Insert page fields — reference page by (document_id, page_number)
             fields = data.get("fields", {})
             for fname, values in fields.items():
                 if isinstance(values, list):
                     for v in values:
                         if v and str(v).strip():
                             print(f"INSERT OR IGNORE INTO page_fields (page_id, field_name, field_value)")
-                            print(f"VALUES ({page_count}, '{esc(fname)}', '{esc(str(v))}');")
+                            print(f"SELECT id, '{esc(fname)}', '{esc(str(v))}' FROM pages WHERE document_id = '{esc(doc_id)}' AND page_number = {page_num};")
                             field_count += 1
 
             # Insert stamps
@@ -115,7 +115,7 @@ def main():
                         s = str(s)
                     if s.strip():
                         print(f"INSERT OR IGNORE INTO page_stamps (page_id, stamp)")
-                        print(f"VALUES ({page_count}, '{esc(s)}');")
+                        print(f"SELECT id, '{esc(s)}' FROM pages WHERE document_id = '{esc(doc_id)}' AND page_number = {page_num};")
                         stamp_count += 1
 
     print(f"\n-- Inserted {page_count} pages, {field_count} fields, {stamp_count} stamps")
