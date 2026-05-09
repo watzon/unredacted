@@ -34,7 +34,7 @@ export function HomePage() {
 
   const handleSearch = useCallback((q: string) => {
     const params = new URLSearchParams(searchParams)
-    if (q.trim().length >= 2) {
+    if (q.trim()) {
       params.set('q', q)
     } else {
       params.delete('q')
