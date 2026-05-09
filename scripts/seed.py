@@ -83,7 +83,15 @@ def main():
                 continue
 
             page_num = int(pf.stem.split("_")[1])
-            content = esc(data.get("content", ""))
+            content = data.get("content", "")
+            # Handle dict-format content (spatial sections)
+            if isinstance(content, dict):
+                parts = []
+                for key in ['TOP LEFT', 'TOP RIGHT', 'MIDDLE', 'BOTTOM LEFT', 'BOTTOM RIGHT']:
+                    if content.get(key):
+                        parts.append(f"{key}:\n{content[key]}")
+                content = '\n\n'.join(parts) if parts else str(content)
+            content = esc(str(content))
             page_type = data.get("page_type", "unknown")
             legibility = data.get("legibility", "unknown")
             meta = data.get("_meta", {})
