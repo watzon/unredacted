@@ -112,7 +112,7 @@ def main():
                     if not s:
                         continue
                     if not isinstance(s, str):
-                        s = str(s)
+                        s = s.get('text', str(s)) if isinstance(s, dict) else str(s)
                     if s.strip():
                         print(f"INSERT OR IGNORE INTO page_stamps (page_id, stamp)")
                         print(f"SELECT id, '{esc(s)}' FROM pages WHERE document_id = '{esc(doc_id)}' AND page_number = {page_num};")

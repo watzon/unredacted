@@ -181,12 +181,14 @@ export function DocumentPage() {
                   {/* Stamps */}
                   {pages[activePage]?.stamps_and_markings?.length > 0 && (
                     <div className="mt-4 flex flex-wrap gap-2">
-                      {pages[activePage].stamps_and_markings.slice(0, 20).map((s, i) => (
+                      {pages[activePage].stamps_and_markings.slice(0, 20).map((s: any, i: number) => {
+                        const text = typeof s === 'string' ? s : (s?.text || String(s))
+                        return (
                         <span key={i} className="text-[9px] font-mono px-2 py-0.5 bg-xf-red/20
                                                     text-red-300 border border-xf-red/30 rounded-sm tracking-wider">
-                          {s}
+                          {text}
                         </span>
-                      ))}
+                      )})}
                     </div>
                   )}
                 </div>
