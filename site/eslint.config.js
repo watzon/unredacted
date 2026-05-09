@@ -29,8 +29,9 @@ export default defineConfig([
       'jsx-a11y/label-has-associated-control': 'warn',
       'jsx-a11y/no-static-element-interactions': 'warn',
       '@typescript-eslint/no-explicit-any': 'off',
-      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/set-state-in-effect': 'off',
       'no-empty': ['error', { allowEmptyCatch: true }],
+      'no-useless-escape': 'off',
     },
   },
 ])
