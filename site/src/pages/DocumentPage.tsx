@@ -7,10 +7,16 @@ import { agencyColor } from '../lib/types'
 
 export function DocumentPage() {
   const { id } = useParams<{ id: string }>()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const targetPage = parseInt(searchParams.get('page') || '1')
   const hlTerms = (searchParams.get('hl') || '').split(/\s+/).filter(Boolean)
   const [doc, setDoc] = useState<DocumentMeta | null>(null)
+
+  const updateUrl = (pageNum: number) => {
+    const params = new URLSearchParams(searchParams)
+    params.set('page', String(pageNum))
+    setSearchParams(params, { replace: true })
+  }
   const [pages, setPages] = useState<PageOCR[]>([])
   const [activePage, setActivePage] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -100,17 +106,18 @@ export function DocumentPage() {
                     onClick={async () => {
                       const curPage = pages[activePage]?._meta?.page || 1
                       if (curPage <= 1) return
-                      // If page not loaded yet, load it
                       const idx = pages.findIndex(p => p._meta?.page === curPage - 1)
                       if (idx < 0 && doc) {
                         const prev = await loadPages(doc.id, curPage - 1)
                         setPages(prev)
                         setActivePage(prev.length - 1)
+                        updateUrl(curPage - 1)
                       } else {
                         setActivePage(idx)
+                        updateUrl(curPage - 1)
                       }
                     }}
-                    disabled={activePage === 0}
+                    disabled={activePage === 0 && (pages[0]?._meta?.page || 1) <= 1}
                     className="px-3 py-1 text-[10px] font-mono tracking-wider border border-xf-border
                                disabled:opacity-20 hover:border-xf-accent/50 transition-colors"
                   >
@@ -128,11 +135,13 @@ export function DocumentPage() {
                         const next = await loadPages(doc.id, curPage + 1)
                         setPages(next)
                         setActivePage(0)
+                        updateUrl(curPage + 1)
                       } else {
                         setActivePage(idx)
+                        updateUrl(curPage + 1)
                       }
                     }}
-                    disabled={activePage === pages.length - 1}
+                    disabled={activePage === pages.length - 1 && (pages[pages.length - 1]?._meta?.page || 0) >= (doc.pages || 9999)}
                     className="px-3 py-1 text-[10px] font-mono tracking-wider border border-xf-border
                                disabled:opacity-20 hover:border-xf-accent/50 transition-colors"
                   >
