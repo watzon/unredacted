@@ -87,9 +87,11 @@ def main():
             # Handle dict-format content (spatial sections)
             if isinstance(content, dict):
                 parts = []
-                for key in ['TOP LEFT', 'TOP RIGHT', 'MIDDLE', 'BOTTOM LEFT', 'BOTTOM RIGHT']:
-                    if content.get(key):
-                        parts.append(f"{key}:\n{content[key]}")
+                for part in content.items():
+                    k, v = part
+                    key = str(k).rstrip(':').strip()
+                    if v:
+                        parts.append(f"{key}:\n{str(v)}")
                 content = '\n\n'.join(parts) if parts else str(content)
             content = esc(str(content))
             page_type = data.get("page_type", "unknown")

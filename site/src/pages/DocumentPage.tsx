@@ -319,16 +319,16 @@ const API = 'https://unredacted-api.watzon.workers.dev'
 
 function highlightText(text: string, terms: string[]): React.ReactNode {
   // Handle dict-format content that slipped through before the seed fix
-  if (text && text.startsWith('{') && text.includes("'TOP LEFT'")) {
+  if (text && text.trim().startsWith('{') && (text.includes("'TOP LEFT'") || text.includes("'TOP LEFT:'"))) {
     try {
       // Use a simple regex to extract the text portions
       const cleaned = text.replace(/^\{|\}$/g, '')
-        .replace(/'TOP LEFT':\s*'/g, 'TOP LEFT:\n')
-        .replace(/'TOP RIGHT':\s*'/g, '\nTOP RIGHT:\n')
-        .replace(/'MIDDLE':\s*'/g, '\nMIDDLE:\n')
-        .replace(/'BOTTOM LEFT':\s*'/g, '\nBOTTOM LEFT:\n')
-        .replace(/'BOTTOM RIGHT':\s*'/g, '\nBOTTOM RIGHT:\n')
-        .replace(/',\s*'/g, '\n')
+        .replace(/'TOP LEFT:?'\s*:\s*'/g, 'TOP LEFT:\n')
+        .replace(/'TOP RIGHT:?'\s*:\s*'/g, '\nTOP RIGHT:\n')
+        .replace(/'MIDDLE:?'\s*:\s*'/g, '\nMIDDLE:\n')
+        .replace(/'BOTTOM LEFT:?'\s*:\s*'/g, '\nBOTTOM LEFT:\n')
+        .replace(/'BOTTOM RIGHT:?'\s*:\s*'/g, '\nBOTTOM RIGHT:\n')
+        .replace(/'\s*,\s*'/g, '\n')
         .replace(/'/g, '')
         .replace(/\\n/g, '\n')
       text = cleaned
