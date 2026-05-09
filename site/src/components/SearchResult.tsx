@@ -14,13 +14,13 @@ interface SearchHit {
   rank: number
 }
 
-export function SearchResult({ hit }: { hit: SearchHit }) {
+export function SearchResult({ hit, query }: { hit: SearchHit; query: string }) {
   // Parse snippet — may contain <mark> tags from FTS
   const snippet = hit.snippet || ''
   const hasPage = hit.page_number !== null && hit.page_number !== undefined
   const linkTo = hasPage
-    ? `/document/${hit.document_id}?page=${hit.page_number}`
-    : `/document/${hit.document_id}`
+    ? `/document/${hit.document_id}?page=${hit.page_number}&hl=${encodeURIComponent(query || '')}`
+    : `/document/${hit.document_id}?hl=${encodeURIComponent(query || '')}`
 
   return (
     <Link

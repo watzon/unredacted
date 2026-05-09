@@ -9,6 +9,7 @@ export function DocumentPage() {
   const { id } = useParams<{ id: string }>()
   const [searchParams] = useSearchParams()
   const targetPage = parseInt(searchParams.get('page') || '1')
+  const hlTerms = (searchParams.get('hl') || '').split(/\s+/).filter(Boolean)
   const [doc, setDoc] = useState<DocumentMeta | null>(null)
   const [pages, setPages] = useState<PageOCR[]>([])
   const [activePage, setActivePage] = useState(0)
@@ -155,7 +156,10 @@ export function DocumentPage() {
                 {/* OCR Content — typewriter style */}
                 <div className="p-6">
                   <div className="typewriter-text text-sm leading-relaxed">
-                    {pages[activePage]?.content || 'No OCR text available for this page.'}
+                    {hlTerms.length > 0
+                      ? highlightText(pages[activePage]?.content || '', hlTerms)
+                      : pages[activePage]?.content || 'No OCR text available for this page.'
+                    }
                   </div>
 
                   {/* Extracted fields for this page */}
@@ -303,6 +307,20 @@ function Field({ label, value }: { label: string; value: string }) {
 }
 
 const API = 'https://unredacted-api.watzon.workers.dev'
+
+function highlightText(text: string, terms: string[]): React.ReactNode {
+  if (!terms.length) return text
+  const pattern = terms
+    .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('|')
+  const regex = new RegExp(`(${pattern})`, 'gi')
+  const parts = text.split(regex)
+  return parts.map((part, i) =>
+    regex.test(part)
+      ? <mark key={i} className="bg-xf-accent/25 text-xf-accent rounded-sm px-0.5">{part}</mark>
+      : part
+  )
+}
 
 // Load a window of pages around the target page from the API
 async function loadPages(docId: string, target: number): Promise<PageOCR[]> {

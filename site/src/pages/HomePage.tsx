@@ -144,7 +144,7 @@ export function HomePage() {
             </p>
             <div className="space-y-4">
               {results.map((hit: any, i: number) => (
-                <SearchResult key={`${hit.document_id}-${i}`} hit={hit} />
+                <SearchResult key={`${hit.document_id}-${i}`} hit={hit} query={query} />
               ))}
             </div>
           </div>
