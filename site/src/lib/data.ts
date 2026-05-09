@@ -33,20 +33,14 @@ export async function loadDocument(id: string): Promise<DocumentMeta | null> {
   return docs.find(d => d.id === id) ?? null
 }
 
-export async function searchDocuments(query: string): Promise<DocumentMeta[]> {
+export async function searchDocuments(query: string): Promise<any[]> {
   try {
     const resp = await fetch(`${API}/api/search?q=${encodeURIComponent(query)}&limit=50`)
     if (!resp.ok) return []
     const data = await resp.json()
-    return (data.results || []).map(mapAPIDoc)
+    return data.results || []
   } catch {
-    const docs = await loadDocuments()
-    const q = query.toLowerCase()
-    return docs.filter(d =>
-      d.title.toLowerCase().includes(q) ||
-      d.description.toLowerCase().includes(q) ||
-      d.agency.toLowerCase().includes(q)
-    )
+    return []
   }
 }
 

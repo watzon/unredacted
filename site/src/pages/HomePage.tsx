@@ -4,12 +4,13 @@ import { loadDocuments, searchDocuments, getUniqueAgencies } from '../lib/data'
 import type { DocumentMeta } from '../lib/types'
 import { agencyColor } from '../lib/types'
 import { CaseFileCard } from '../components/CaseFileCard'
+import { SearchResult } from '../components/SearchResult'
 
 export function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [docs, setDocs] = useState<DocumentMeta[]>([])
   const [agencies, setAgencies] = useState<string[]>([])
-  const [results, setResults] = useState<DocumentMeta[] | null>(null)
+  const [results, setResults] = useState<any[] | null>(null)
   const [loading, setLoading] = useState(true)
 
   const query = searchParams.get('q') || ''
@@ -127,13 +128,25 @@ export function HomePage() {
         </div>
       </div>
 
-      {/* Case file grid */}
+      {/* Results */}
       <div className="max-w-7xl mx-auto px-4 py-10">
         {loading ? (
           <div className="text-center py-20">
             <p className="text-xf-muted font-mono text-sm animate-pulse">
               ACCESSING DATABASE...
             </p>
+          </div>
+        ) : results ? (
+          /* Search results view */
+          <div>
+            <p className="text-xf-muted text-xs font-mono tracking-wider mb-6">
+              {results.length} {results.length === 1 ? 'RESULT' : 'RESULTS'} FOR "{query}"
+            </p>
+            <div className="space-y-4">
+              {results.map((hit: any, i: number) => (
+                <SearchResult key={`${hit.document_id}-${i}`} hit={hit} />
+              ))}
+            </div>
           </div>
         ) : displayDocs.length === 0 ? (
           <div className="text-center py-20">
@@ -142,6 +155,7 @@ export function HomePage() {
             </p>
           </div>
         ) : (
+          /* Document grid view */
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {displayDocs.slice(0, 24).map(doc => (

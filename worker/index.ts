@@ -83,7 +83,7 @@ async function handleSearch(url: URL, env: Env): Promise<Response> {
   const q = url.searchParams.get('q') || '';
   const agency = url.searchParams.get('agency') || '';
   const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
-  const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get('limit') || '20')));
+  const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get('limit') || '25')));
   const offset = (page - 1) * limit;
 
   // Empty query → list all
@@ -91,10 +91,11 @@ async function handleSearch(url: URL, env: Env): Promise<Response> {
     return await handleDocumentList(url, env);
   }
 
-  // Build FTS5 query — escape special chars, add prefix matching
+  // Build FTS5 query with prefix matching
   const terms = q.trim().replace(/['"]/g, '').split(/\s+/).filter(Boolean);
   const ftsQuery = terms.map(t => `"${t}"*`).join(' AND ');
 
+  // Search page content + document titles
   let sql: string;
   let params: any[];
 
@@ -108,9 +109,8 @@ async function handleSearch(url: URL, env: Env): Promise<Response> {
         d.release_date,
         d.description,
         d.pdf_url,
-        d.thumbnail_url,
         d.total_pages,
-        snippet(search_idx, 2, '<mark>', '</mark>', '...', 40) AS snippet,
+        snippet(search_idx, 2, '<mark>', '</mark>', '…', 40) AS snippet,
         rank
       FROM search_idx s
       JOIN documents d ON d.id = s.document_id
@@ -130,9 +130,8 @@ async function handleSearch(url: URL, env: Env): Promise<Response> {
         d.release_date,
         d.description,
         d.pdf_url,
-        d.thumbnail_url,
         d.total_pages,
-        snippet(search_idx, 2, '<mark>', '</mark>', '...', 40) AS snippet,
+        snippet(search_idx, 2, '<mark>', '</mark>', '…', 40) AS snippet,
         rank
       FROM search_idx s
       JOIN documents d ON d.id = s.document_id
@@ -145,18 +144,30 @@ async function handleSearch(url: URL, env: Env): Promise<Response> {
 
   const { results } = await env.DB.prepare(sql).bind(...params).all();
 
-  // Group by document for dedup
+  // Also search document titles for matches (non-FTS fallback)
+  const titleSql = agency
+    ? `SELECT id AS document_id, NULL AS page_number, title, agency, release_date, description, pdf_url, total_pages, title AS snippet, 0 AS rank
+       FROM documents WHERE title LIKE ?1 AND agency = ?2
+       ORDER BY title LIMIT 5`
+    : `SELECT id AS document_id, NULL AS page_number, title, agency, release_date, description, pdf_url, total_pages, title AS snippet, 0 AS rank
+       FROM documents WHERE title LIKE ?1
+       ORDER BY title LIMIT 5`;
+
+  const titleParams = agency ? [`%${q}%`, agency] : [`%${q}%`];
+  const { results: titleResults } = await env.DB.prepare(titleSql).bind(...titleParams).all();
+
+  // Merge: FTS content results first, then title matches, dedup by document_id
   const seen = new Set<string>();
-  const deduped = [];
-  for (const r of (results as any[])) {
+  const merged = [];
+  for (const r of [...(results as any[]), ...(titleResults as any[])]) {
     if (!seen.has(r.document_id)) {
       seen.add(r.document_id);
-      deduped.push(r);
+      merged.push(r);
     }
   }
 
-  // Count
-  let countSql = agency
+  // Count total unique document hits
+  const countSql = agency
     ? `SELECT COUNT(DISTINCT s.document_id) as total FROM search_idx s JOIN documents d ON d.id = s.document_id WHERE search_idx MATCH ?1 AND d.agency = ?2`
     : `SELECT COUNT(DISTINCT s.document_id) as total FROM search_idx s WHERE search_idx MATCH ?1`;
 
@@ -165,7 +176,7 @@ async function handleSearch(url: URL, env: Env): Promise<Response> {
   const total = (countResults[0] as any)?.total || 0;
 
   return json({
-    results: deduped,
+    results: merged,
     total,
     page,
     pages: Math.ceil(total / limit),
